@@ -1,4 +1,4 @@
-package download.manager;
+package download.manager.impl;
 
 import java.io.BufferedInputStream;
 import java.io.File;

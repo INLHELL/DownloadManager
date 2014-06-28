@@ -16,8 +16,8 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import download.manager.DownloadManagerImpl;
 import download.manager.api.DownloadManager;
+import download.manager.impl.DownloadManagerImpl;
 
 @Path("/dm")
 public class DownloadManagerController {

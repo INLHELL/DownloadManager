@@ -1,10 +1,11 @@
+package download.manager.impl;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
-import download.manager.DownloadTaskImpl;
-import download.manager.Status;
+import download.manager.impl.DownloadTaskImpl;
+import download.manager.impl.Status;
 
 public class DownloadTaskImplTest {
 

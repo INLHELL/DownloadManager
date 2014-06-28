@@ -2,7 +2,7 @@ package download.manager.api;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
-import download.manager.Status;
+import download.manager.impl.Status;
 
 /**
  * Contains information of a particular download process.

@@ -3,8 +3,8 @@ package download.manager.app;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import download.manager.DownloadManagerImpl;
 import download.manager.api.DownloadManager;
+import download.manager.impl.DownloadManagerImpl;
 
 public class TestApp {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestApp.class);

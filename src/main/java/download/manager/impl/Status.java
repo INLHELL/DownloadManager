@@ -1,4 +1,4 @@
-package download.manager;
+package download.manager.impl;
 
 public enum Status {
 

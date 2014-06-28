@@ -1,7 +1,7 @@
 package download.manager.controller;
 
-import download.manager.Status;
 import download.manager.api.DownloadTask;
+import download.manager.impl.Status;
 
 public class DownloadResponse {
     private String id;
