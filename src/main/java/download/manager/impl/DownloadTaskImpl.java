@@ -11,6 +11,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +42,9 @@ public class DownloadTaskImpl implements Runnable, DownloadTask {
     private File tmpFile;
 
     public DownloadTaskImpl(final String url, final String fileName) {
+	Validate.notBlank(url, "Passed URL must be not null and not empty!");
+	Validate.notBlank(fileName, "Passed file name must be not null and not empty!");
+
 	LOGGER.info("New download task will be created, with ID: '{}'.", ID);
 	this.url = url;
 	targetFileName = fileName;
@@ -59,16 +63,21 @@ public class DownloadTaskImpl implements Runnable, DownloadTask {
 	LOGGER.info("Status of this task: '{}'.", status);
     }
 
-    private void closeResources() {
+    private boolean closeResources() {
+	boolean areClosed = false;
 	LOGGER.info("Files and input stream will be closed.");
 	try {
-	    bufferedInputStream.close();
+	    if (bufferedInputStream != null) {
+		bufferedInputStream.close();
+	    }
 	    tmpRandomAccessFile.close();
 	    targetRandomAccessFile.close();
+	    areClosed = true;
 	}
 	catch (IOException e) {
 	    LOGGER.warn(e.getMessage());
 	}
+	return areClosed;
     }
 
     private File createFile(String fileName) {
@@ -96,15 +105,22 @@ public class DownloadTaskImpl implements Runnable, DownloadTask {
 	return randomAccessFile;
     }
 
-    private void deleteFile(File file) {
+    private boolean deleteFile(File file) {
+	boolean wasDeleted = false;
 	synchronized (lock) {
 	    if (file.exists()) {
 		LOGGER.info("Temporary file with name: '{}' will be deleted.", file);
+		file.setWritable(true);
 		if (!file.delete()) {
 		    LOGGER.warn("Temporary file with name: '{}' was not deleted.", file);
+		    file.deleteOnExit();
+		}
+		else {
+		    wasDeleted = true;
 		}
 	    }
 	}
+	return wasDeleted;
     }
 
     private BufferedInputStream openConnection() {
@@ -153,7 +169,8 @@ public class DownloadTaskImpl implements Runnable, DownloadTask {
 	}
     }
 
-    private void storeProgress() {
+    private boolean storeProgress() {
+	boolean progressWasStored = false;
 	synchronized (lock) {
 	    LOGGER.info(
 		    "Progress of downloading task with ID: '{}' will be stored in temporary file, with name: '{}'.",
@@ -162,11 +179,13 @@ public class DownloadTaskImpl implements Runnable, DownloadTask {
 		LOGGER.info("Store current position: '{}'.", downloadedBytes);
 		openFile(tmpFileName);
 		tmpRandomAccessFile.writeInt(downloadedBytes);
+		progressWasStored = true;
 	    }
 	    catch (IOException e) {
 		LOGGER.error(e.getMessage());
 	    }
 	}
+	return progressWasStored;
     }
 
     protected boolean setStatus(Status status) {
@@ -197,10 +216,31 @@ public class DownloadTaskImpl implements Runnable, DownloadTask {
 		if (setStatus(Status.CANCELLED)) {
 		    LOGGER.info("Download task with ID: '{}', will be canceled.", ID);
 		    LOGGER.info("Status of download task was changed to: '{}'.", status);
-		    closeResources();
-		    threadPool.remove(this);
+		    if (closeResources()) {
+			LOGGER.info("All resources were successfully  closed.");
+		    }
+		    else {
+			LOGGER.warn("Some resources was not successfully closed!");
+		    }
+		    if ((threadPool != null) && threadPool.remove(this)) {
+			LOGGER.info("Download task was removed form thread pool.");
+		    }
+		    else {
+			LOGGER.warn("Download task was not removed form thread pool!");
+		    }
 		    LOGGER.info("Targer file: '{}' will be deleted.", targetFileName);
-		    deleteFile(targetFile);
+		    if (deleteFile(tmpFile)) {
+			LOGGER.info("Temporary file '{}' was deleted.", tmpFileName);
+		    }
+		    else {
+			LOGGER.warn("Temporary file '{}' was not deleted!", tmpFileName);
+		    }
+		    if (deleteFile(targetFile)) {
+			LOGGER.info("Target file '{}' was deleted.", targetFile);
+		    }
+		    else {
+			LOGGER.warn("Target file '{}' was not deleted!", targetFile);
+		    }
 		    makePause = false;
 		}
 		else {
@@ -217,6 +257,7 @@ public class DownloadTaskImpl implements Runnable, DownloadTask {
 
     @Override
     public void download(ThreadPoolExecutor threadPool) {
+	Validate.notNull(threadPool, "Passed thread pool can not be null!");
 	if (status != Status.DOWNLOADING) {
 	    synchronized (lock) {
 		this.threadPool = threadPool;
@@ -292,8 +333,18 @@ public class DownloadTaskImpl implements Runnable, DownloadTask {
 	    synchronized (lock) {
 		if (setStatus(Status.PAUSED)) {
 		    LOGGER.info("Status of download task was changed to: '{}'.", status);
-		    storeProgress();
-		    closeResources();
+		    if (storeProgress()) {
+			LOGGER.info("Download progress was successfully stored in '{}'.", tmpFile);
+		    }
+		    else {
+			LOGGER.warn("Download progress was not stored!");
+		    }
+		    if (closeResources()) {
+			LOGGER.info("All resources were successfully  closed.");
+		    }
+		    else {
+			LOGGER.warn("Some resources was not successfully closed!");
+		    }
 		}
 		else {
 		    LOGGER.warn(
@@ -382,8 +433,18 @@ public class DownloadTaskImpl implements Runnable, DownloadTask {
 	}
 	finally {
 	    synchronized (lock) {
-		closeResources();
-		deleteFile(tmpFile);
+		if (closeResources()) {
+		    LOGGER.info("All resources were successfully  closed.");
+		}
+		else {
+		    LOGGER.warn("Some resources was not successfully closed!");
+		}
+		if (deleteFile(tmpFile)) {
+		    LOGGER.info("Temporary file '{}' was deleted.", tmpFileName);
+		}
+		else {
+		    LOGGER.warn("Temporary file '{}' was not deleted!", tmpFileName);
+		}
 	    }
 	}
     }
