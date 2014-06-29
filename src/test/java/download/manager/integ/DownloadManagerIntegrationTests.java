@@ -26,45 +26,45 @@ public class DownloadManagerIntegrationTests {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DownloadManagerIntegrationTests.class);
 
-    private String targetFileName = "dopdf-eula.pdf";
+    private final String TARGET_FILE_NAME = "dopdf-eula.pdf";
     private String tmpFileName;
-    private String url = "http://www.dopdf.com/download/pdf/dopdf-eula.pdf";
+    private final String URL = "http://www.dopdf.com/download/pdf/dopdf-eula.pdf";
     private DownloadManager downloadManager = DownloadManagerImpl.getInstance();
 
     @After
     public void after() {
-	deleteFile(targetFileName);
+	deleteFile(TARGET_FILE_NAME);
 	deleteFile(tmpFileName);
     }
 
     @Test
     public void testDownload() throws InterruptedException, IOException {
-	String id = downloadManager.addAndDownload(url, targetFileName);
+	String id = downloadManager.addAndDownload(URL, TARGET_FILE_NAME);
 	tmpFileName = "dopdf-eula.pdf." + id + ".tmp";
 
 	while (downloadManager.get(id).getStatus() != Status.DOWNLOADING) {
 	}
 	waitForDownloadCompletion(id);
 	MatcherAssert.assertThat(downloadManager.get(id).getStatus(), Matchers.equalTo(Status.COMPLETED));
-	MatcherAssert.assertThat(new File(targetFileName), FileExistenceMatcher.exists());
+	MatcherAssert.assertThat(new File(TARGET_FILE_NAME), FileExistenceMatcher.exists());
 	MatcherAssert.assertThat(getTargetFileSize(), Matchers.equalTo(getContetLength()));
 	MatcherAssert.assertThat(new File(tmpFileName), FileExistenceMatcher.doesNotExist());
     }
 
     @Test
     public void testCancel() throws InterruptedException, IOException {
-	String id = downloadManager.add(url, targetFileName);
+	String id = downloadManager.add(URL, TARGET_FILE_NAME);
 	tmpFileName = "dopdf-eula.pdf." + id + ".tmp";
 
 	downloadManager.cancel(id);
 	MatcherAssert.assertThat(downloadManager.get(id).getStatus(), Matchers.equalTo(Status.CANCELLED));
-	MatcherAssert.assertThat(new File(targetFileName), FileExistenceMatcher.doesNotExist());
+	MatcherAssert.assertThat(new File(TARGET_FILE_NAME), FileExistenceMatcher.doesNotExist());
 	MatcherAssert.assertThat(new File(tmpFileName), FileExistenceMatcher.doesNotExist());
     }
 
     @Test
     public void testDownloadAndPauseAndResume() throws InterruptedException, IOException {
-	String id = downloadManager.addAndDownload(url, targetFileName);
+	String id = downloadManager.addAndDownload(URL, TARGET_FILE_NAME);
 	tmpFileName = "dopdf-eula.pdf." + id + ".tmp";
 
 	while (downloadManager.get(id).getStatus() != Status.DOWNLOADING) {
@@ -74,13 +74,13 @@ public class DownloadManagerIntegrationTests {
 	downloadManager.resume(id);
 	waitForDownloadCompletion(id);
 	MatcherAssert.assertThat(downloadManager.get(id).getStatus(), Matchers.equalTo(Status.COMPLETED));
-	MatcherAssert.assertThat(new File(targetFileName), FileExistenceMatcher.exists());
+	MatcherAssert.assertThat(new File(TARGET_FILE_NAME), FileExistenceMatcher.exists());
 	MatcherAssert.assertThat(getTargetFileSize(), Matchers.equalTo(getContetLength()));
     }
 
     @Test
     public void testDownloadAndPause() throws InterruptedException, IOException {
-	String id = downloadManager.addAndDownload(url, targetFileName);
+	String id = downloadManager.addAndDownload(URL, TARGET_FILE_NAME);
 	tmpFileName = "dopdf-eula.pdf." + id + ".tmp";
 
 	while (downloadManager.get(id).getStatus() != Status.DOWNLOADING) {
@@ -88,7 +88,7 @@ public class DownloadManagerIntegrationTests {
 	downloadManager.pause(id);
 	MatcherAssert.assertThat(downloadManager.get(id).getStatus(), Matchers.equalTo(Status.PAUSED));
 
-	MatcherAssert.assertThat(new File(targetFileName), FileExistenceMatcher.exists());
+	MatcherAssert.assertThat(new File(TARGET_FILE_NAME), FileExistenceMatcher.exists());
 	MatcherAssert.assertThat(new File(tmpFileName), FileExistenceMatcher.exists());
 	MatcherAssert.assertThat(getTargetFileSize(),
 		Matchers.equalTo(Long.valueOf(downloadManager.get(id).getProgress())));
@@ -96,7 +96,7 @@ public class DownloadManagerIntegrationTests {
 
     @Test
     public void testDownloadAndPauseAndCancel() throws InterruptedException, IOException {
-	String id = downloadManager.addAndDownload(url, targetFileName);
+	String id = downloadManager.addAndDownload(URL, TARGET_FILE_NAME);
 	tmpFileName = "dopdf-eula.pdf." + id + ".tmp";
 
 	while (downloadManager.get(id).getStatus() != Status.DOWNLOADING) {
@@ -111,7 +111,7 @@ public class DownloadManagerIntegrationTests {
 
     @Test
     public void testDownloadAndPauseAndResumeAndCancel() throws InterruptedException, IOException {
-	String id = downloadManager.addAndDownload(url, targetFileName);
+	String id = downloadManager.addAndDownload(URL, TARGET_FILE_NAME);
 	tmpFileName = "dopdf-eula.pdf." + id + ".tmp";
 
 	while (downloadManager.get(id).getStatus() != Status.DOWNLOADING) {
@@ -125,12 +125,12 @@ public class DownloadManagerIntegrationTests {
 	downloadManager.cancel(id);
 	MatcherAssert.assertThat(downloadManager.get(id).getStatus(), Matchers.equalTo(Status.CANCELLED));
 
-	MatcherAssert.assertThat(new File(targetFileName), FileExistenceMatcher.doesNotExist());
+	MatcherAssert.assertThat(new File(TARGET_FILE_NAME), FileExistenceMatcher.doesNotExist());
     }
 
     @Test
     public void testDownloadAndResume() throws InterruptedException, IOException {
-	String id = downloadManager.addAndDownload(url, targetFileName);
+	String id = downloadManager.addAndDownload(URL, TARGET_FILE_NAME);
 	tmpFileName = "dopdf-eula.pdf." + id + ".tmp";
 
 	while (downloadManager.get(id).getStatus() != Status.DOWNLOADING) {
@@ -138,21 +138,21 @@ public class DownloadManagerIntegrationTests {
 	downloadManager.resume(id);
 	MatcherAssert.assertThat(downloadManager.get(id).getStatus(), Matchers.equalTo(Status.DOWNLOADING));
 
-	MatcherAssert.assertThat(new File(targetFileName), FileExistenceMatcher.exists());
+	MatcherAssert.assertThat(new File(TARGET_FILE_NAME), FileExistenceMatcher.exists());
 	MatcherAssert.assertThat(getTargetFileSize(),
 		Matchers.equalTo(Long.valueOf(downloadManager.get(id).getProgress())));
     }
 
     @Test
     public void testDownloadAndCancel() throws InterruptedException, IOException {
-	String id = downloadManager.addAndDownload(url, targetFileName);
+	String id = downloadManager.addAndDownload(URL, TARGET_FILE_NAME);
 	tmpFileName = "dopdf-eula.pdf." + id + ".tmp";
 
 	while (downloadManager.get(id).getStatus() != Status.DOWNLOADING) {
 	}
 	downloadManager.cancel(id);
 	MatcherAssert.assertThat(downloadManager.get(id).getStatus(), Matchers.equalTo(Status.CANCELLED));
-	MatcherAssert.assertThat(new File(targetFileName), FileExistenceMatcher.doesNotExist());
+	MatcherAssert.assertThat(new File(TARGET_FILE_NAME), FileExistenceMatcher.doesNotExist());
 	MatcherAssert.assertThat(new File(tmpFileName), FileExistenceMatcher.doesNotExist());
     }
 
@@ -185,13 +185,13 @@ public class DownloadManagerIntegrationTests {
     }
 
     private long getContetLength() throws IOException {
-	URL targetUrl = new URL(url);
-	URLConnection connectionUrl = targetUrl.openConnection();
-	return connectionUrl.getContentLength();
+	URL targetURL = new URL(URL);
+	URLConnection connectionURL = targetURL.openConnection();
+	return connectionURL.getContentLength();
     }
 
     private long getTargetFileSize() throws IOException {
-	File targetFile = new File(targetFileName);
+	File targetFile = new File(TARGET_FILE_NAME);
 	return targetFile.length();
     }
 
